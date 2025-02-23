@@ -1,0 +1,43 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "cwd": "${workspaceRoot}",
+            //需要配置以下文件路径
+            "executable": "F:\\project_no_cn\\GC_25\\code\\robot_control\\USER\\build\\Template\\GC_25.elf",
+            "name": "dap",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            //需要配置以下文件路径
+            "configFiles": [
+                "F:\\vscode_debug\\openocd-0.12.0\\openocd-0.12.0\\tcl\\interface\\cmsis-dap.cfg",
+                "F:\\vscode_debug\\openocd-0.12.0\\openocd-0.12.0\\tcl\\target\\stm32f4x.cfg"
+            ],
+            "searchDir": [],
+            "runToEntryPoint": "main",
+            "showDevDebugOutput": "none"
+        },
+
+        {
+            "cwd": "${workspaceRoot}",
+            //需要配置以下文件路径
+            "executable": "F:\\project_no_cn\\GC_25\\code\\robot_control\\USER\\build\\Template\\GC_25.elf",
+            "name": "stlink",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            //需要配置以下文件路径
+            "configFiles": [
+                "F:\\vscode_debug\\openocd-0.12.0\\openocd-0.12.0\\tcl\\interface\\stlink-v2-1.cfg",
+                "F:\\vscode_debug\\openocd-0.12.0\\openocd-0.12.0\\tcl\\target\\stm32f4x.cfg"
+            ],
+            "searchDir": [],
+            "runToEntryPoint": "main",
+            "showDevDebugOutput": "none"
+        }
+    ]
+}

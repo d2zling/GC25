@@ -1,0 +1,5 @@
+{
+    "files.associations": {
+        "robot_arm_control.h": "c"
+    }
+}
