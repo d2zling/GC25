@@ -16,6 +16,9 @@
 
 围绕以上问题，结合结构和视觉的需求，电控开始进行从硬件电路到软件驱动、算法层面的全面设计。
 
+<div style="text-align: center;"><img src="文档\image\readme\物流机器人整体视图.jpg" alt="堆叠设计"></div>
+
+
 ---
 
 ### 硬件设计
