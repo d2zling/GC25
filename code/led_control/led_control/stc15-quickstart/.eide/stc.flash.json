@@ -1,0 +1,5 @@
+{
+    "device": "auto",
+    "baudrate": "115200",
+    "oscFreq": "16000"
+}

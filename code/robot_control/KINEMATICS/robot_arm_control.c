@@ -4,12 +4,17 @@
     机械臂控制
 */
 
+static u8 robot_arm_motor_rx_data[30];          //电机返回数据缓存
+
 static float degree_switch = 0.0f;              //实际角度转换电机脉冲系数
 static float rad_2_angle = 0.0f;                //弧度转角度系数
 static float angle_2_rad = 0.0f;                //角度转弧度系数
 static float square_first_arm_lenght= 0.0f;    //大臂长度平方
 static float square_second_arm_lenght= 0.0f;   //小臂长度平方
 
+float gimbal_motor_1_position = 0;        //云台电机位置
+float gimbal_motor_2_position = 0;        //云台电机位置
+float gimbal_motor_3_position = 0;        //云台电机位置
 /**
 *@brief 机械臂控制初始化
 *@param 无
@@ -19,6 +24,8 @@ void robot_arm_control_init(void)
 {
     servo_init();
     gimbal_motor_init();
+    usart3_rx_dma_init(robot_arm_motor_rx_data, 20);
+
     motor_turn_to_zero(motor[4]);
     motor_turn_to_zero(motor[5]);
     motor_turn_to_zero(motor[6]);
@@ -176,4 +183,42 @@ float* robot_arm_calculate_forward(float first_arm_degree, float second_arm_degr
     out_arm_location_yz[1] = z1 + z2 - gripper_height + base_height;
 
     return out_arm_location_yz;
+}
+
+/**
+*@brief 串口3串口中断
+*@param 无
+*@return 无
+*/
+void USART3_IRQHandler(void)
+{
+    uint32_t data_buff;
+
+    if(USART_GetITStatus(USART3, USART_IT_IDLE) != RESET)//空闲中断
+    {
+		USART3->DR; //清USART_IT_IDLE标志	不进行此步骤会一直进中断
+
+		DMA_Cmd(DMA1_Stream1, DISABLE);
+		DMA_ClearFlag(DMA1_Stream1, DMA_FLAG_TCIF1);
+
+        //读取电机角度数据
+        if(robot_arm_motor_rx_data[1] == 0x36)
+        {
+            data_buff = robot_arm_motor_rx_data[3] << 24 |
+                        robot_arm_motor_rx_data[4] << 16 |
+                        robot_arm_motor_rx_data[5] << 8  |
+                        robot_arm_motor_rx_data[6];
+
+            if(robot_arm_motor_rx_data[0] == 0x01) gimbal_motor_1_position = (float)data_buff * 360.0f / 65536.0f;
+            else if(robot_arm_motor_rx_data[0] == 0x02) gimbal_motor_2_position = (float)data_buff * 360.0f / 65536.0f;
+            else if(robot_arm_motor_rx_data[0] == 0x03) gimbal_motor_3_position = (float)data_buff * 360.0f / 65536.0f;
+        }
+
+        //清除缓冲区
+        for(char i = 0; i < 20; i++) robot_arm_motor_rx_data[i] = 0;
+
+		USART_ClearFlag(USART3, USART_FLAG_IDLE);
+		DMA_SetCurrDataCounter(DMA1_Stream1, 20);//设置传输数据长度
+		DMA_Cmd(DMA1_Stream1, ENABLE);//打开DMA
+    }
 }

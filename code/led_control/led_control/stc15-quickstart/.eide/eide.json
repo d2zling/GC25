@@ -1,0 +1,78 @@
+{
+  "name": "stc15-quickstart",
+  "type": "C51",
+  "dependenceList": [],
+  "srcDirs": [
+    "src",
+    "lib",
+    "driver"
+  ],
+  "outDir": "build",
+  "virtualFolder": {
+    "name": "<virtual_root>",
+    "files": [],
+    "folders": []
+  },
+  "miscInfo": {
+    "uid": "9a21f85e5f563385caf52460dbf0f1ea"
+  },
+  "targets": {
+    "Release": {
+      "excludeList": [],
+      "toolchain": "Keil_C51",
+      "compileConfig": {
+        "options": ""
+      },
+      "uploader": "Custom",
+      "uploadConfig": {
+        "bin": "",
+        "commandLine": "python ./tools/stcflash.py -p ${port} \"${programFile}\"",
+        "eraseChipCommand": ""
+      },
+      "uploadConfigMap": {
+        "stcgal": {
+          "bin": "",
+          "eepromImgPath": "null",
+          "options": "./.EIDE/stc.flash.json",
+          "extraOptions": ""
+        }
+      },
+      "custom_dep": {
+        "name": "default",
+        "incList": [
+          "src",
+          "lib/stc15_lib",
+          "lib/stc15_lib/include",
+          "driver"
+        ],
+        "libList": [],
+        "defineList": [
+          "DEBUG"
+        ]
+      },
+      "builderOptions": {
+        "Keil_C51": {
+          "version": 2,
+          "beforeBuildTasks": [],
+          "afterBuildTasks": [],
+          "global": {
+            "ram-mode": "SMALL",
+            "rom-mode": "LARGE"
+          },
+          "c/cpp-compiler": {
+            "optimization-type": "SPEED",
+            "optimization-level": "level-8"
+          },
+          "asm-compiler": {},
+          "linker": {
+            "remove-unused": true,
+            "output-format": "elf"
+          }
+        }
+      }
+    }
+  },
+  "version": "3.5",
+  "deviceName": null,
+  "packDir": null
+}

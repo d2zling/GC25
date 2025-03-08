@@ -32,7 +32,7 @@ static u8 rec_usart2_buff[dma_buffer_size];
 void protocols_init(void)
 {
 	usart1_init(115200);	//树莓派通讯
-	usart2_init(250000);	//调试通讯
+	usart2_init(256000);	//调试通讯
 	usart1_rx_dma_init(rec_usart1_buff, dma_buffer_size);
     usart2_rx_dma_init(rec_usart2_buff, dma_buffer_size);
 	soft_packet_init();

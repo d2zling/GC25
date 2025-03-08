@@ -7,6 +7,7 @@
 
 #include "usart.h"
 #include "timer.h"
+#include "dma.h"
 
 //电机控制结构体
 typedef struct 
@@ -32,5 +33,8 @@ void chassis_motor_control_synchronous(void);
 void gimbal_motor_init(void);
 void gimbal_motor_control_speed(steeping_motor _motor);
 void gimbal_motor_control_position(steeping_motor _motor);
+
+void get_motor_angle(steeping_motor _motor);
+void motor_pow_control(steeping_motor _motor, char state);
 
 #endif

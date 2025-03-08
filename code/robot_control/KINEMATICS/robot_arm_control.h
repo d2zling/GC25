@@ -22,4 +22,7 @@ void robot_arm_control_arm_poosition(float first_arm_degree, float second_arm_de
 void robot_arm_calculate_inverse(float y, float z, float* out_arm_degree);
 float* robot_arm_calculate_forward(float first_arm_degree, float second_arm_degree, float* out_arm_location_yz);
 
+extern float gimbal_motor_1_position;
+extern float gimbal_motor_2_position;
+extern float gimbal_motor_3_position;
 #endif

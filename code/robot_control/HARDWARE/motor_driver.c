@@ -187,4 +187,45 @@ void gimbal_motor_control_position(steeping_motor _motor)
 	delay_ms(1);
 }
 
+/**
+*@brief 单个云台电机获取旋转角度
+*@param _motor 电机对象
+*@return 无
+*/
+void get_motor_angle(steeping_motor _motor)
+{
+	char get_angle[3] = {	_motor.ID, 	
+		 					0x36,
+		 					0x6b};					
 
+	for(char i = 0; i < 3; i++)
+	{
+		while((USART3->SR&0X40)==0);
+		USART3->DR = get_angle[i];    
+	}
+
+	delay_ms(1);
+}
+
+/**
+*@brief 单个云台电机失能闭环控制
+*@param _motor 电机对象
+*@return 无
+*/
+void motor_pow_control(steeping_motor _motor, char state)
+{
+	char pow_ctrl[6] = {_motor.ID, 	
+							0xf3,
+							0xab,
+							state,
+							0x00,
+							0x6b};					
+
+	for(char i = 0; i < 6; i++)
+	{
+		while((USART3->SR&0X40)==0);
+		USART3->DR = pow_ctrl[i];    
+	}
+
+	delay_ms(1);
+}
