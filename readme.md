@@ -568,7 +568,7 @@ static path_quene_t x_speed = {.quene = node_x_speed, .timer.count_end_time = 0x
 
 config.h文件编写
 
-灯光板
+~~灯光板（完成）~~
 
 电滑环
 
@@ -576,6 +576,6 @@ config.h文件编写
 
 分线板v2
 
-泰山派拓展版
+~~泰山派拓展版（完成）~~
 
 定位算法速度优化
