@@ -45,21 +45,21 @@ int main(void)
 	robot_arm_control_init();
     scanner_init();
 
-    while(1);
+    // while(1);
     
-    delay_ms(3000);
-    // motor_pow_control(motor[4], ENABLE);
-    // motor_pow_control(motor[5], ENABLE);
-    // motor_pow_control(motor[6], ENABLE);
+    // delay_ms(3000);
+    // // motor_pow_control(motor[4], ENABLE);
+    // // motor_pow_control(motor[5], ENABLE);
+    // // motor_pow_control(motor[6], ENABLE);
 
-    while(1)
-    {
-        get_motor_angle(motor[4]);
-        get_motor_angle(motor[5]);
-        get_motor_angle(motor[6]);
-        printf("out:%f %f %f\r\n", gimbal_motor_1_position, gimbal_motor_2_position, gimbal_motor_3_position);
-        delay_ms(20);
-    }
+    // while(1)
+    // {
+    //     get_motor_angle(motor[4]);
+    //     get_motor_angle(motor[5]);
+    //     get_motor_angle(motor[6]);
+    //     printf("out:%f %f %f\r\n", gimbal_motor_1_position, gimbal_motor_2_position, gimbal_motor_3_position);
+    //     delay_ms(20);
+    // }
 
 /*
 
