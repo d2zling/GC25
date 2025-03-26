@@ -172,6 +172,9 @@
           },
           {
             "path": "../SYSTEM/dma/dma.c"
+          },
+          {
+            "path": "../SYSTEM/gpio/gpio.c"
           }
         ],
         "folders": []
@@ -339,7 +342,8 @@
           "../KINEMATICS",
           "../SYSTEM/timer",
           "../SYSTEM/dma",
-          "../HARDWARE"
+          "../HARDWARE",
+          "../SYSTEM/gpio"
         ],
         "libList": [],
         "defineList": [

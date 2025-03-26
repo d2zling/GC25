@@ -28,13 +28,16 @@ void motor_turn_to_zero(steeping_motor _motor);
 
 void chassis_motor_init(void);
 void chassis_motor_control_speed(steeping_motor _motor);
+void chassis_motor_control_position(steeping_motor _motor);
 void chassis_motor_control_synchronous(void);
 
 void gimbal_motor_init(void);
 void gimbal_motor_control_speed(steeping_motor _motor);
 void gimbal_motor_control_position(steeping_motor _motor);
+void gimbal_motor_set_speed_acc(int speed, char acc);
 
 void get_motor_angle(steeping_motor _motor);
 void motor_pow_control(steeping_motor _motor, char state);
+void get_motor_state(steeping_motor _motor);
 
 #endif

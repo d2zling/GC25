@@ -192,6 +192,178 @@ void set_car_speed_Omni_Wheel(int x, int y, int w)
 }
 
 /**
+*@brief 设置全向轮位置,仅在定位时使用,以斜向为x和y轴控制位置
+*@param x_position 前后位置
+*@param y_position 左右位置
+*@return 无
+*/
+void set_car_position_Omni_Wheel_diagonal(int x_position, int y_position)
+{
+    if(x_position < 0)
+    {
+        motor[0].direction = 1;
+        motor[1].direction = 0;
+        x_position = x_position * -1;
+    }
+    else
+    {
+        motor[0].direction = 0;
+        motor[1].direction = 1;
+    }
+
+    if(y_position < 0)
+    {
+        motor[2].direction = 1;
+        motor[3].direction = 0;
+        y_position = y_position * -1;
+    }
+    else
+    {
+        motor[2].direction = 0;
+        motor[3].direction = 1;
+    }
+
+    motor[1].pulse_num = motor[0].pulse_num = x_position;
+    motor[2].pulse_num = motor[3].pulse_num = y_position;
+
+    motor[0].speed = motor[1].speed = motor[2].speed = motor[3].speed = 10;
+
+    for(char i = 0; i<4; i++)
+	{
+		chassis_motor_control_position(motor[i]);
+	}
+}
+
+/**
+*@brief 设置全向轮速度,仅在定位时使用,以斜向为x和y轴控制位置
+*@param x_position 前后位置
+*@param y_position 左右位置
+*@return 无
+*/
+void set_car_speed_Omni_Wheel_diagonal(int x_speed, int y_speed)
+{
+    if(x_speed < 0)
+    {
+        motor[0].direction = 1;
+        motor[1].direction = 0;
+        x_speed = x_speed * -1;
+    }
+    else
+    {
+        motor[0].direction = 0;
+        motor[1].direction = 1;
+    }
+
+    if(y_speed < 0)
+    {
+        motor[2].direction = 1;
+        motor[3].direction = 0;
+        y_speed = y_speed * -1;
+    }
+    else
+    {
+        motor[2].direction = 0;
+        motor[3].direction = 1;
+    }
+
+    motor[0].speed =  motor[1].speed = x_speed;
+    motor[2].speed = motor[3].speed = y_speed;
+
+    for(char i = 0; i<4; i++)
+	{
+		chassis_motor_control_speed(motor[i]);
+	}
+}
+
+/**
+*@brief 设置全向轮位置,仅在定位时使用,以正向为x和y轴控制位置
+*@param x_position 前后位置
+*@param y_position 左右位置
+*@return 无
+*/
+void set_car_position_Omni_Wheel_axial(int x_position, int y_position)
+{
+    if(x_position != 0)
+    {
+        if(x_position < 0)
+        {
+            motor[0].direction = 1;
+            motor[1].direction = 0;
+            motor[2].direction = 0;
+            motor[3].direction = 1;
+            x_position = x_position * -1;
+        }
+        else
+        {
+            motor[0].direction = 0;
+            motor[1].direction = 1;
+            motor[2].direction = 1;
+            motor[3].direction = 0;
+        }
+        motor[1].pulse_num = motor[2].pulse_num = motor[3].pulse_num = motor[0].pulse_num = x_position;
+    }
+    else
+    {
+        if(y_position < 0)
+        {
+            motor[0].direction = 0;
+            motor[1].direction = 1;
+            motor[2].direction = 0;
+            motor[3].direction = 1;
+            y_position = y_position * -1;
+        }
+        else
+        {
+            motor[0].direction = 1;
+            motor[1].direction = 0;
+            motor[2].direction = 1;
+            motor[3].direction = 0;
+        }
+        motor[1].pulse_num = motor[2].pulse_num = motor[3].pulse_num = motor[0].pulse_num = y_position;
+    }
+
+    motor[0].speed = motor[1].speed = motor[2].speed = motor[3].speed = 10;
+
+    for(char i = 0; i<4; i++)
+	{
+		chassis_motor_control_position(motor[i]);
+	}
+}
+
+/**
+*@brief 设置全向轮旋转角度位置，仅在定位时使用
+*@param x_position 前后位置
+*@param y_position 左右位置
+*@return 无
+*/
+void set_car_w_position_Omni_Wheel(int w_position)
+{
+    if(w_position < 0)
+    {
+        motor[0].direction = 1;
+        motor[1].direction = 1;
+        motor[2].direction = 1;
+        motor[3].direction = 1;
+        w_position = -w_position;
+    }
+    else
+    {
+        motor[0].direction = 0;
+        motor[1].direction = 0;
+        motor[2].direction = 0;
+        motor[3].direction = 0;
+    }
+
+    motor[0].pulse_num = motor[1].pulse_num = motor[2].pulse_num = motor[3].pulse_num = w_position;
+    motor[0].speed = motor[1].speed = motor[2].speed = motor[3].speed = 10;
+
+    for(char i = 0; i<4; i++)
+	{
+		chassis_motor_control_position(motor[i]);
+	}
+}
+
+/**
 *@brief 全向轮轮单次底盘运动控制
 *@param x 世界坐标x速度以mm为单位
 *@param y 世界坐标y速度以mm为单位

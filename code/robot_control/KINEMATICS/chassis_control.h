@@ -20,6 +20,10 @@ void chassis_control_Mecanum_Wheel(int x, int y, float degree);
 void stop_Mecanum_Wheel(void);
 
 void set_car_speed_Omni_Wheel(int x, int y, int w);
+void set_car_position_Omni_Wheel_diagonal(int x_position, int y_position);
+void set_car_speed_Omni_Wheel_diagonal(int x_speed, int y_speed);
+void set_car_position_Omni_Wheel_axial(int x_position, int y_position);
+void set_car_w_position_Omni_Wheel(int w_position);
 void chassis_control_Omni_Wheel(float x, float y, float degree);
 void stop_Omni_Wheel(void);
 

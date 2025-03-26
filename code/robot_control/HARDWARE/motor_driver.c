@@ -4,7 +4,7 @@
     此为电机驱动文件，用于控制四个底盘电机和三个云台电机的速度和方向，使用UART4与电机进行通信。
 */
 
-//四个电机结构体对象
+//7个电机结构体对象
 //0~3为底盘电机
 //4~6为云台电机
 steeping_motor motor[7];
@@ -96,6 +96,37 @@ void chassis_motor_control_speed(steeping_motor _motor)
 }
 
 /**
+*@brief 单个电机控制位置函数
+*@param _motor 电机对象
+*@return 无
+*@note 	使用绝对位置控制
+*/
+void chassis_motor_control_position(steeping_motor _motor)
+{
+	char ctrl_location_arr[13] = {	_motor.ID, 	
+									0xfd, 					
+									_motor.direction, 	
+									_motor.speed >> 8, 
+									_motor.speed, 		
+									_motor.acc_speed,	
+									_motor.pulse_num >> 24,
+									_motor.pulse_num >> 16,
+									_motor.pulse_num >> 8,
+									_motor.pulse_num , 
+									0x0,						//相对位置控制
+									_motor.synchronous,		
+									0x6b};					
+
+	for(char i = 0; i < 13; i++)
+	{
+		while((UART4->SR&0X40)==0);
+		UART4->DR = ctrl_location_arr[i];    
+	}
+
+	delay_ms(1);
+}
+
+/**
 *@brief 底盘电机同步控制函数
 *@param void
 *@return 无
@@ -126,13 +157,13 @@ void gimbal_motor_init(void)
     {
         motor[i].ID = i - 3;
         motor[i].synchronous = 0;//不启用同步
-        motor[i].acc_speed = 150;
-		motor[i].speed = 150;
+        motor[i].acc_speed = 200;//默认加速度
+		motor[i].speed = 500;	 //默认速度
     }
 }
 
 /**
-*@brief 单个云台电机控制速度函数
+*@brief 单个电机控制速度函数
 *@param _motor 电机对象
 *@return 无
 */
@@ -157,7 +188,7 @@ void gimbal_motor_control_speed(steeping_motor _motor)
 }
 
 /**
-*@brief 单个云台电机控制位置函数
+*@brief 单个电机控制位置函数
 *@param _motor 电机对象
 *@return 无
 *@note 	使用绝对位置控制
@@ -188,7 +219,22 @@ void gimbal_motor_control_position(steeping_motor _motor)
 }
 
 /**
-*@brief 单个云台电机获取旋转角度
+*@brief 云台电机运行速度
+*@param 无
+*@return 无
+*/
+void gimbal_motor_set_speed_acc(int speed, char acc)
+{
+	for(char i = 4; i < 7; i++)
+	{
+		motor[i].acc_speed = acc;
+		motor[i].speed = speed;
+	}
+
+}
+
+/**
+*@brief 单个电机获取旋转角度
 *@param _motor 电机对象
 *@return 无
 */
@@ -208,13 +254,13 @@ void get_motor_angle(steeping_motor _motor)
 }
 
 /**
-*@brief 单个云台电机失能闭环控制
+*@brief 单个电机失能闭环控制
 *@param _motor 电机对象
 *@return 无
 */
 void motor_pow_control(steeping_motor _motor, char state)
 {
-	char pow_ctrl[6] = {_motor.ID, 	
+	char pow_ctrl[6] = {	_motor.ID, 	
 							0xf3,
 							0xab,
 							state,
@@ -225,6 +271,26 @@ void motor_pow_control(steeping_motor _motor, char state)
 	{
 		while((USART3->SR&0X40)==0);
 		USART3->DR = pow_ctrl[i];    
+	}
+
+	delay_ms(1);
+}
+
+/**
+*@brief 单个电机获取状态
+*@param _motor 电机对象
+*@return 无
+*/
+void get_motor_state(steeping_motor _motor)
+{
+	char get_state[3] = {	_motor.ID, 	
+							0x3a,
+							0x6b};
+
+	for(char i = 0; i < 3; i++)
+	{
+		while((USART3->SR&0X40)==0);
+		USART3->DR = get_state[i];    
 	}
 
 	delay_ms(1);

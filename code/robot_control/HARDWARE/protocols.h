@@ -19,9 +19,11 @@
 
 #define dma_buffer_size 120
 
-#define color       "@1#"
-#define position    "@2#"
-#define location    "@3#"
+#define color       "@1#"   //运动检测
+#define position    "@2#"   //物料位置检测
+#define location    "@3#"   //直角定位
+#define circle      "@4#"   //圆心定位
+#define clear_buff  "@5#"   //清除摄像头缓存
 
 //数据包结构体
 typedef struct usart_pack

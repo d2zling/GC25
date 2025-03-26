@@ -375,6 +375,6 @@ void UART5_IRQHandler(void)
 	{
 		u8 scan_data = USART_ReceiveData(UART5);
 		rec_scanner_data(scan_data);
-		//printf("%c", scan_data);
+		// printf("%c", scan_data);
 	}
 }

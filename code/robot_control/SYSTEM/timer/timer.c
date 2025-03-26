@@ -71,9 +71,10 @@ void timer_4_init(uint16_t arr, uint16_t psc)
   	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
+	GPIO_PinAFConfig(GPIOD, GPIO_PinSource14, GPIO_AF_TIM4);
 	GPIO_PinAFConfig(GPIOD, GPIO_PinSource15, GPIO_AF_TIM4);
 
-  	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;
+  	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_14 | GPIO_Pin_15;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
@@ -92,6 +93,9 @@ void timer_4_init(uint16_t arr, uint16_t psc)
 	
 	TIM_OC4Init(TIM4, &TIM_OCInitStructure);
 	TIM_OC4PreloadConfig(TIM4, TIM_OCPreload_Enable);
+
+	TIM_OC3Init(TIM4, &TIM_OCInitStructure);
+	TIM_OC3PreloadConfig(TIM4, TIM_OCPreload_Enable);
 
   	TIM_ARRPreloadConfig(TIM4, ENABLE);
 

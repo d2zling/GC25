@@ -18,5 +18,6 @@ void servo_init(void)
 void set_servo_angel(float angel)
 {
     TIM_SetCompare4(TIM4, (uint32_t)((angel / 180 * 2000) + 500));
+    TIM_SetCompare3(TIM4, (uint32_t)((angel / 180 * 2000) + 500));
 }
 

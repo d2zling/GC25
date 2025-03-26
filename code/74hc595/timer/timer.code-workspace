@@ -1,12 +1,15 @@
 {
     "folders": [
-		{
-			"path": "../.."
-		}
-	],
+        {
+            "path": "."
+        }
+    ],
     "settings": {
-        "files.autoGuessEncoding": true,
-        "C_Cpp.default.configurationProvider": "cl.eide",
+        "EIDE.SourceTree.AutoSearchIncludePath": true,
+        "EIDE.SourceTree.AutoSearchObjFile": true,
+        "files.autoGuessEncoding": false,
+        "files.encoding": "gbk",
+        "EIDE.ARM.Option.AutoGenerateRTE_Components": false,
         "C_Cpp.errorSquiggles": "disabled",
         "files.associations": {
             ".eideignore": "ignore",
@@ -19,14 +22,14 @@
             "*.cpp": "cpp",
             "*.cxx": "cpp",
             "*.cc": "cpp",
-            "STC15Fxxxx.H": "cpp"
+            "REG52.H": "cpp"
         },
+        "C_Cpp.default.configurationProvider": "cl.eide",
         "[yaml]": {
             "editor.insertSpaces": true,
             "editor.tabSize": 4,
             "editor.autoIndent": "advanced"
-        },
-        "cortex-debug.variableUseNaturalFormat": true
+        }
     },
     "extensions": {
         "recommendations": [
@@ -40,12 +43,7 @@
             "cschlosser.doxdocgen",
             "ms-vscode.vscode-serial-monitor",
             "alefragnani.project-manager",
-            "dan-c-underwood.arm",
-            "marus25.cortex-debug"
+            "cl.stm8-debug"
         ]
-    },
-    "launch": {
-        "version": "0.2.0",
-        "configurations": []
     }
 }

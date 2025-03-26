@@ -1,115 +1,26 @@
 #include "motion.h"
 
-/**
- * @brief 从物料盘取物料,弃用
- * @param disk_num 物料盘编号
- * @return 无
- */
-void grab_item_on_disk(char disk_num)
-{
-    float degree[3];
-    open_claw_small();
+//扫码数据
+char * qr_dara = NULL;
+//机械臂保持角度
+float _abs_robot_arm_angle = 0;
 
-    if(disk_num == 0)
-    {
-        robot_arm_control_botton_position(-42.0f);
-    }
-    else if(disk_num == 2)
-    {
-        robot_arm_control_botton_position(42.0f);
-    }
+//物料盘坐标
+float disk_item_position[3][3] = {disk_num_3_position, 
+                                  disk_num_2_position, 
+                                  disk_num_1_position};
 
-    open_claw_small();
+//转盘坐标
+float rotator_item_position[3][3] = {rotator_num_1_position, 
+                                     rotator_num_2_position, 
+                                     rotator_num_3_position};
 
-    robot_arm_calculate_inverse(95.0f, 175.0f , degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-    delay_ms(400);
-    close_claw();
-    delay_ms(200);
-    robot_arm_calculate_inverse(95.0f, 215.0f , degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-    delay_ms(450);
-    robot_arm_calculate_inverse(150.0f, 220.0f , degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-    delay_ms(300);
-    
-    open_claw_small();
-}
-
-/**
- * @brief 从转盘拿取物料
- * @param rotator_num 转盘编号
- * @return 无
- */
-void grab_item_on_rotator(char rotator_num)
-{
-    static char disk_flag = 0;
-    float degree[3];
-    open_claw();
-
-    if(rotator_num == '1')
-    {
-        robot_arm_control_botton_position(-14.0f);
-        delay_ms(300);
-        robot_arm_calculate_inverse(340.0f, 180.0f , degree);
-        robot_arm_control_arm_poosition(degree[0], degree[1]);
-        delay_ms(1000);
-    }
-    if(rotator_num == '2')
-    {
-        robot_arm_control_botton_position(14.0f);
-        delay_ms(300);
-        robot_arm_calculate_inverse(340.0f, 180.0f , degree);
-        robot_arm_control_arm_poosition(degree[0], degree[1]);
-        delay_ms(1000);
-    }
-    else if(rotator_num == '3')
-    {
-        robot_arm_control_botton_position(0.0f);
-        delay_ms(300);
-        robot_arm_calculate_inverse(185.0f, 170.0f , degree);
-        robot_arm_control_arm_poosition(degree[0], degree[1]);
-        delay_ms(1000);
-    }
-
-    close_claw();
-
-    delay_ms(300);
-
-    robot_arm_calculate_inverse(150.0f, 310.0f , degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-
-    if(disk_flag == 0)
-    {
-        robot_arm_control_botton_position(41.0f);
-        disk_flag++;
-    }
-    else if(disk_flag == 1)
-    {
-        robot_arm_control_botton_position(0.0f);
-        disk_flag++;
-    }
-    else if(disk_flag == 2)
-    {
-        robot_arm_control_botton_position(-41.0f);
-        disk_flag = 0;
-    }
-
-    delay_ms(700);
-    robot_arm_calculate_inverse(92.0f, 210.0f , degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-
-    delay_ms(700);
-    robot_arm_calculate_inverse(92.0f, 190.0f , degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-
-    delay_ms(200);
-    open_claw_small();
-
-    delay_ms(200);
-    robot_arm_calculate_inverse(140.0f, 310.0f , degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-}
+float ground_item_position[6][3] = {ground_num_3_position, 
+                                    ground_num_2_position, 
+                                    ground_num_1_position,
+                                    ground_num_3_second_floor_position,
+                                    ground_num_2_second_floor_position,
+                                    ground_num_1_second_floor_position};
 
 /**
  * @brief 获取扫码数据
@@ -118,7 +29,6 @@ void grab_item_on_rotator(char rotator_num)
  */
 void qr_code_task(void)
 {
-    char * qr_dara = NULL;
     static char out_data[20] = {0};
 
     stop_Omni_Wheel();
@@ -138,156 +48,370 @@ void qr_code_task(void)
             while((USART1->SR&0X40)==0);
             USART1->DR = out_data[i]; 
         }
-        delay_ms(10);
     }
 
     printf("scan:%s\r\n", qr_dara);
+    _abs_robot_arm_angle = 45.0f;
 }
 
 /**
- * @brief 转盘区域任务
+ * @brief 从转盘拿物料
+ * @param rotator_num:从视觉接收的转盘位置号码
+ * @return 无
+ */
+void grab_item_on_rotator_plus(uint8_t rotator_num)
+{
+    rotator_num = rotator_num - '1';
+
+    open_claw();
+    robot_arm_control_yz(rotator_item_position[rotator_num][0], 
+                         rotator_item_position[rotator_num][1]);
+    robot_arm_control_botton_position(rotator_item_position[rotator_num][2]);
+    delay_ms(800);
+    close_claw();
+    delay_ms(300);  
+    robot_arm_set_middle_position();
+    delay_ms(500);
+    // if((rotator_num == 1) || (rotator_num == 3)) delay_ms(400);
+    // else delay_ms(200);
+}
+
+/**
+ * @brief 从物料盘拿物料
+ * @param item_color:需要放置的颜色
+ * @return 无
+ */
+void garb_item_on_disk_plus(uint8_t item_color)
+{
+    item_color = item_color - '1';
+
+    open_claw_small();
+    robot_arm_control_botton_position(disk_item_position[item_color][2]);
+    robot_arm_control_yz(disk_item_position[item_color][0], disk_item_position[item_color][1] + disk_hight);
+    delay_ms(800);
+    robot_arm_control_yz(disk_item_position[item_color][0], disk_item_position[item_color][1]);
+    delay_ms(500);
+    close_claw();
+    delay_ms(500);
+    robot_arm_control_yz(disk_item_position[item_color][0], disk_item_position[item_color][1] + 120.0f);
+}
+
+/**
+ * @brief 从地面抓取物料
+ * @param item_color:需要抓取的颜色
+ * @return 无
+ */
+void garb_item_on_guound_plus(uint8_t item_color)
+{
+    item_color = item_color - '1';
+
+    open_claw_small();
+    robot_arm_control_botton_position(ground_item_position[item_color][2]);
+    robot_arm_control_yz(ground_item_position[item_color][0], ground_item_position[item_color][1]);
+    delay_ms(1000);
+    close_claw();
+    delay_ms(300);
+    robot_arm_control_yz(ground_item_position[item_color][0], ground_item_position[item_color][1] + 150.0f);
+}
+
+/**
+ * @brief 把物料盘放到地上
+ * @param item_color:需要放置的颜色
+ * @param second_floor:是否放置到二楼 0：一楼 3：二楼
+ * @return 无
+ */
+void place_item_on_ground(uint8_t item_color, char second_floor)
+{
+    item_color = item_color - '1' + second_floor;
+
+    robot_arm_control_botton_position(ground_item_position[item_color][2]);
+    robot_arm_control_yz(ground_item_position[item_color][0], ground_item_position[item_color][1] + 20.0f);
+    delay_ms(1200);
+    robot_arm_control_yz(ground_item_position[item_color][0], ground_item_position[item_color][1]);
+    delay_ms(200);
+    open_claw_small();
+    delay_ms(200);
+    robot_arm_control_yz(ground_item_position[item_color][0], ground_item_position[item_color][1] + 50.0f);
+    delay_ms(500);
+    robot_arm_set_middle_position();
+}
+
+/**
+ * @brief 物料放入物料盘
+ * @param item_color:夹取物料颜色
+ * @return 无
+ */
+void place_item_on_disk(uint8_t item_color)
+{
+    item_color = item_color - '1';
+
+    robot_arm_control_botton_position(disk_item_position[item_color][2]);
+    delay_ms(200);
+    robot_arm_control_yz(disk_item_position[item_color][0], disk_item_position[item_color][1] + disk_hight + 20.0f);
+    delay_ms(700);
+    robot_arm_control_yz(disk_item_position[item_color][0], disk_item_position[item_color][1]);
+    delay_ms(500);
+    open_claw_small();
+    delay_ms(300);
+    robot_arm_control_yz(disk_item_position[item_color][0], disk_item_position[item_color][1] + disk_hight + 40.0f);
+    delay_ms(400);
+    robot_arm_set_middle_position();
+    delay_ms(500);
+}
+
+/**
+ * @brief 圆盘区快速定位
  * @param 无
  * @return 无
  */
-void rotator_task(void)
+void rotator_location_task(void)
 {
-    static char count_task_time = 0;
+    int* location_data = NULL;
+    int err1 = 0;
+    int err2 = 0;
 
-    int x, y, w, _x, _y;
-    int* location_data;
-    float degree[2];
+    //定位直角
+    robot_arm_control_botton_position(135.0f);
+    delay_ms(1000);
+    robot_arm_control_yz(232.0f, 220.0f);
+    delay_ms(1000);
+
+    //清除接收标志位
+    get_pi_location_data();
+
+    //角度定位
+    while(1)
+    {
+        location_data = NULL;
+        while(location_data == NULL)
+        {
+            call_pi(location);
+            
+            location_data = get_pi_location_data();
+        }
+
+        err1 =  location_data[0] * 0.05f;
+
+        if(err1 > 20) err1 = 20;
+        else if(err1 < -20) err1  = -20;
+
+        set_car_speed_Omni_Wheel(0, 0, err1);
+        if(abs(location_data[0]) < degree_location_dead_area) break;
+    }
+
+    //清除接收标志位
+    get_pi_location_data();
+
+    //xy平面定位
+    while(1)
+    {
+        location_data = NULL;
+        
+        while(location_data == NULL)
+        {
+            call_pi(location);
+            location_data = get_pi_location_data();
+        }
+
+        err1 = -(rotator_targe_x - location_data[1]) * 0.2f;
+        err2 = (rotator_targe_y - location_data[2]) * 0.2f;
+
+        set_car_speed_Omni_Wheel_diagonal(err1, err2);
+
+        if((abs(rotator_targe_x - location_data[1]) < first_location_dead_area) &&
+            (abs(rotator_targe_y - location_data[2]) < first_location_dead_area))
+        {
+            stop_Omni_Wheel();
+                break;
+        }
+    }
+}
+
+/**
+ * @brief 加工区快速定位
+ * @param enable_circle_location:是否启用圆环定位
+ * @return 无
+ */
+void processing_location_task(char enable_circle_location)
+{
+    static float Ki_1 = 0, Ki_2 = 0;
+    static float last_err1 = 0, last_err2 = 0;
+    float Kp_1 = 0, Kp_2 = 0;
+    int* location_data = NULL;
+    float err1 = 0;
+    float err2 = 0;
+
+    //定位直角动作
+    robot_arm_control_botton_position(135.0f);
+    delay_ms(1000);
+    robot_arm_control_yz(232.0f, 220.0f);
+    delay_ms(2000);
+
+    //角度定位
+    while(1)
+    {
+        location_data = NULL;
+        while(location_data == NULL)
+        {
+            call_pi(location);
+            location_data = get_pi_location_data();
+        }
+
+        err1 =  location_data[0] * 0.08f;
+
+        if(err1 > 20) err1 = 20;
+        else if(err1 < -20) err1  = -20;
+
+        set_car_speed_Omni_Wheel(0, 0, err1);
+        if(abs(location_data[0]) < degree_location_dead_area) break;
+    }
+
+    //xy平面定位
+    while(1)
+    {
+        location_data = NULL;
+        
+        while(location_data == NULL)
+        {
+            call_pi(location);
+            location_data = get_pi_location_data();
+        }
+
+        if((abs(process_targe_x_first - location_data[1]) < first_location_dead_area) &&
+           (abs(process_targe_y_first - location_data[2]) < first_location_dead_area))
+        {
+            stop_Omni_Wheel();
+                break;
+        }
+        
+        err1 = -(process_targe_x_first - location_data[1]) * 0.2f;
+        err2 = (process_targe_y_first - location_data[2]) * 0.2f;
+
+        set_car_speed_Omni_Wheel_diagonal(err1, err2);
+    }
+
+    //角度定位
+    while(1)
+    {
+        location_data = NULL;
+        while(location_data == NULL)
+        {
+            call_pi(location);
+            location_data = get_pi_location_data();
+        }
+
+        err1 =  location_data[0] * 0.08f;
+
+        if(err1 > 20) err1 = 20;
+        else if(err1 < -20) err1  = -20;
+
+        set_car_speed_Omni_Wheel(0, 0, err1);
+        if(abs(location_data[0]) < degree_location_dead_area) break;
+    }
+
+    if(enable_circle_location == DISABLE)
+    {
+        robot_arm_set_middle_position();
+        delay_ms(500);
+        return;
+    }
+
+    //圆环定位动作
+    robot_arm_control_botton_position(0.0f);
+    robot_arm_control_yz(193.4f, 80.0f);
+    delay_ms(2000);
+
+    //圆环定位
+    while(1)
+    {
+        location_data = NULL;
+
+        while(location_data == NULL)
+        {
+            call_pi(circle);
+            location_data = get_pi_location_data();
+        }
+
+        if((abs(process_targe_x_second - location_data[1]) < second_location_dead_area) &&
+           (abs(process_targe_y_second - location_data[2]) < second_location_dead_area))
+        {
+            stop_Omni_Wheel();
+            break;
+        }
+
+        err1 = (float)(process_targe_y_second - location_data[2]);
+        err2 = -(float)(process_targe_x_second - location_data[1]);
+
+        Kp_1 = err1 * 0.055f;
+        Kp_2 = err2 * 0.055f;
+
+        Ki_1 += err1 * 0.008f;
+        Ki_2 += err2 * 0.008f;
+
+        //比例限幅
+        if(Kp_1 > circle_locatin_limit) Kp_1 = circle_locatin_limit;
+        else if(Kp_1 < -circle_locatin_limit) Kp_1 = -circle_locatin_limit;  
+        if(Kp_2 > circle_locatin_limit) Kp_2 = circle_locatin_limit;
+        else if(Kp_2 < -circle_locatin_limit) Kp_2 = -circle_locatin_limit;  
+
+        //积分限幅
+        // if(Ki_1 > 1) Ki_1 = 1;
+        // else if(Ki_1 < -1) Ki_1 = -1;
+        // if(Ki_2 > 1) Ki_2 = 1;
+        // else if(Ki_2 < -1) Ki_2 = -1;
+
+        //积分清零
+        if((err1 < 0) && (last_err1 > 0)) Ki_1 = 0;
+        else if((err1 > 0) && (last_err1 < 0)) Ki_1 = 0;
+        if((err2 < 0) && (last_err2 > 0)) Ki_2 = 0;
+        else if((err2 > 0) && (last_err2 < 0)) Ki_2 = 0;
+
+        set_car_speed_Omni_Wheel(Kp_1 + Ki_1, Kp_2 + Ki_2, 0);
+
+        last_err1 = err1;
+        last_err2 = err2;
+    }
+    
+    //清除缓冲区
+    get_pi_location_data();
+
+    // //校验
+    // location_data = NULL;
+    // while(location_data == NULL)
+    // {
+    //     call_pi(circle);
+    //     location_data = get_pi_location_data();
+    // }
+
+    // if((abs(process_targe_x_second - location_data[1]) > second_location_dead_area) ||
+    //    (abs(process_targe_y_second - location_data[2]) > second_location_dead_area))
+    // {
+    //     //重新圆环定位
+    //     goto circle_location;
+    // }
+}
+
+/**
+ * @brief 转盘区域任务更新
+ * @param 无
+ * @return 无
+ */
+void rotator_task_plus(void)
+{
+    static char count_time = 0;
+    char p_qr_data_packge = 0;
     u8 *color_area_data;
 
     stop_Omni_Wheel();
-    robot_arm_calculate_inverse(220, 250, degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-    robot_arm_control_botton_position(-135.0f);
-    
-    for(char i = 0; i < 60; i++)
-    {
-        call_pi(location);
-        delay_ms(50);
-    }
 
-    //粗定位
-    while(1)
-    {
-        call_pi(location);
-        delay_ms(50);
-        location_data = get_pi_location_data();
+    rotator_location_task();
 
-        if(location_data != NULL)
-        {
-            x = rotator_first_location_x_target - location_data[1];
-            y = rotator_first_location_y_targe - location_data[2];
-
-            //检测定位完成
-            if((abs(x) < first_location_dead_area) && 
-               (abs(y) < first_location_dead_area) && 
-               (abs(location_data[0]) < first_location_dead_area))
-            {
-                stop_Omni_Wheel();
-                delay_ms(1000);
-                break;
-            }
-
-            if(location_data[0] > 0) w = 3;
-            else if (location_data[0] < 0) w = -3;
-            else w = 0;
-
-            if(y > 0)
-                _x = _y = -3;
-            else if(y < 0)
-                _x = _y = 3;
-
-            if(x > 0)
-            {
-                _x += -3;
-                _y += 3;
-            }
-            else if(x < 0)
-            {
-                _x += 3;
-                _y += -3; 
-            }
-
-            set_car_speed_Omni_Wheel(_x, _y, w);
-        }
-        else stop_Omni_Wheel();
-    }
-
-    robot_arm_calculate_inverse(250, 150, degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-
-    for(char i = 0; i < 60; i++)
-    {
-        call_pi(location);
-        delay_ms(50);
-    }
-
-    //精定位
-    while(1)
-    {
-        call_pi(location);
-        delay_ms(50);
-        location_data = get_pi_location_data();
-
-        if(location_data != NULL)
-        {
-            x = rotator_second_location_x_target - location_data[1];
-            y = rotator_second_location_y_target - location_data[2];
-
-            //检测定位完成
-            if((abs(x) < second_location_dead_area) && 
-               (abs(y) < second_location_dead_area) && 
-               (abs(location_data[0]) < second_location_dead_area))
-            {
-                printf("%d %d %d\r\n", x, y, w);
-                stop_Omni_Wheel();
-                robot_arm_calculate_inverse(second_arm_lenght, first_arm_lenght + base_height, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                robot_arm_control_botton_position(0.0f);
-                break;
-            }
-
-            if(location_data[0] > 0) w = 1;
-            else if (location_data[0] < 0) w = -1;
-            else w = 0;
-
-            if(y > 0)
-                _x = _y = -1;
-            else if(y < 0)
-                _x = _y = 1;
-
-            if(x > 0)
-            {
-                _x += -1;
-                _y += 1;
-            }
-            else if(x < 0)
-            {
-                _x += 1;
-                _y += -1; 
-            }
-
-            //限幅
-            if(_x > 1) _x = 1;
-            else if(_x < -1) _x = -1;
-
-            if(_y > 1) _y = 1;
-            else if(_y < -1) _y = -1;
-
-            set_car_speed_Omni_Wheel(_x, _y, w);
-        }
-        else stop_Omni_Wheel();
-    }
-
-    robot_arm_calculate_inverse(170.0f, 320.0f , degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
+    //摆到物料识别位置
     robot_arm_control_botton_position(0.0f);
-    delay_ms(1000);
+    robot_arm_control_yz(210.0f, 280.0f);
+    delay_ms(2000);
 
-    //抓取
+    //物料识别
     while(1)
     {
         call_pi(color);
@@ -296,14 +420,19 @@ void rotator_task(void)
         if(color_area_data != NULL) break;
     }
 
-    grab_item_on_rotator(color_area_data[qr_data_packge[count_task_time    ] - '1']);
-    grab_item_on_rotator(color_area_data[qr_data_packge[count_task_time + 1] - '1']);
+    //第二段二维码读数
+    if(count_time == 1) p_qr_data_packge = 4;
 
-    robot_arm_calculate_inverse(170.0f, 320.0f , degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-    robot_arm_control_botton_position(0.0f);
+    grab_item_on_rotator_plus(color_area_data[qr_data_packge[0 + p_qr_data_packge] - '1']);
+    place_item_on_disk(qr_data_packge[0 + p_qr_data_packge]);
+    grab_item_on_rotator_plus(color_area_data[qr_data_packge[1 + p_qr_data_packge] - '1']);
+    place_item_on_disk(qr_data_packge[1 + p_qr_data_packge]);
     delay_ms(1000);
 
+    //清除缓冲
+    get_pi_color_area_data();
+
+    //位置检测
     while(1)
     {
         call_pi(position);
@@ -311,444 +440,73 @@ void rotator_task(void)
         color_area_data = get_pi_color_area_data();
         if(color_area_data != NULL) break;
     }
-    
-    printf("%s\r\n", color_area_data);
-    grab_item_on_rotator(color_area_data[qr_data_packge[count_task_time + 2] - '1']);
 
-    count_task_time = count_task_time + 4;
+    grab_item_on_rotator_plus(color_area_data[qr_data_packge[2 + p_qr_data_packge] - '1']);
+    place_item_on_disk(qr_data_packge[2 + p_qr_data_packge]);
 
-    robot_arm_control_botton_position(41.0f);
-    robot_arm_calculate_inverse(220, 250, degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-    open_claw_small();
+    robot_arm_reset_yz();
+
+    _abs_robot_arm_angle = 225.0f;
+    count_time++;
 }
 
 /**
- * @brief 加工区域任务
+ * @brief 加工区域任务更新
  * @param 无
  * @return 无
  */
-void processing_area_task(void)
+void processing_task_plus(void)
 {
-    static char tasks_times = 0;
-    static char qr_times = 0;
-    
-    int x, y, w, _x, _y;
-    int* location_data;
-    float degree[2];
-    float item_height = 0;
+    static char count_time = 0;
+    char p_qr_data_packge = 0;
 
-    if(tasks_times > 1) qr_times = 4;
-    if(tasks_times == 3) item_height = 70;
     stop_Omni_Wheel();
-    open_claw_small();
 
-    //夹物料
-    robot_arm_control_botton_position(41.0f);
-    robot_arm_calculate_inverse(150.0f, 210.0f , degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-    delay_ms(500);
-    robot_arm_calculate_inverse(90.0f, 180.0f , degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-    delay_ms(500);
-    close_claw();
-    delay_ms(500);
-    robot_arm_calculate_inverse(90.0f, 210, degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-    delay_ms(500);
-    robot_arm_calculate_inverse(220, 250, degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-    robot_arm_control_botton_position(-135.0f);
+    if(count_time == 3)
+        processing_location_task(DISABLE);
+    else
+        processing_location_task(ENABLE);
 
-    for(char i = 0; i < 30; i++)
+    robot_arm_set_middle_position();
+
+    if(count_time > 1) p_qr_data_packge = 4;
+    
+    //放置三个物料
+    for(char i = 0;i < 3;i++)
     {
-        call_pi(location);
-        delay_ms(50);
-    }
-
-    //粗定位
-    while(1)
-    {
-        call_pi(location);
-        delay_ms(50);
-        location_data = get_pi_location_data();
-
-        if(location_data != NULL)
-        {
-            x = processing_area_first_location_x_targe - location_data[1];
-            y = processing_area_first_location_y_targe - location_data[2];
-
-            //检测定位完成
-            if((abs(x) < first_location_dead_area) && 
-               (abs(y) < first_location_dead_area) && 
-               (abs(location_data[0]) < first_location_dead_area))
-            {
-                printf("location finish!\r\n");
-                stop_Omni_Wheel();
-                delay_ms(1000);
-                break;
-            }
-
-            if(location_data[0] > 0) w = 3;
-            else if (location_data[0] < 0) w = -3;
-            else w = 0;
-
-            if(y > 0)
-                _x = _y = -3;
-            else if(y < 0)
-                _x = _y = 3;
-
-            if(x > 0)
-            {
-                _x += -3;
-                _y += 3;
-            }
-            else if(x < 0)
-            {
-                _x += 3;
-                _y += -3; 
-            }
-
-            set_car_speed_Omni_Wheel(_x, _y, w);
-        }
-        else stop_Omni_Wheel();
-    }
-
-    robot_arm_calculate_inverse(220, 100, degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-
-    for(char i = 0; i < 30; i++)
-    {
-        call_pi(location);
-        delay_ms(50);
-    }
-
-    //精定位
-    while(1)
-    {
-        call_pi(location);
-        delay_ms(50);
-        location_data = get_pi_location_data();
-
-        if(location_data != NULL)
-        {
-            x = processing_area_second_location_x_targe - location_data[1];
-            y = processing_area_second_location_y_targe - location_data[2];
-
-            //检测定位完成
-            if((abs(x) < second_location_dead_area) && 
-               (abs(y) < second_location_dead_area) && 
-               (abs(location_data[0]) < second_location_dead_area))
-            {
-                printf("%d %d %d\r\n", x, y, w);
-                stop_Omni_Wheel();
-                robot_arm_control_botton_position(0.0f);
-                robot_arm_calculate_inverse(second_arm_lenght, first_arm_lenght + base_height, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                break;
-            }
-
-            if(location_data[0] > 0) w = 1;
-            else if (location_data[0] < 0) w = -1;
-            else w = 0;
-
-            if(y > 0)
-                _x = _y = -1;
-            else if(y < 0)
-                _x = _y = 1;
-
-            if(x > 0)
-            {
-                _x += -1;
-                _y += 1;
-            }
-            else if(x < 0)
-            {
-                _x += 1;
-                _y += -1; 
-            }
-
-            //限幅
-            if(_x > 1) _x = 1;
-            else if(_x < -1) _x = -1;
-
-            if(_y > 1) _y = 1;
-            else if(_y < -1) _y = -1;
-
-            set_car_speed_Omni_Wheel(_x, _y, w);
-        }
-        else stop_Omni_Wheel();
-    }
-
-    //粗加工区域定位数据
-    if((tasks_times == 0) || (tasks_times == 2))
-    {
-        for(char i = 0; i < 3; i++)
-        {
-            //夹起第二个物料
-            if(i == 1)
-            {
-                robot_arm_control_botton_position(0.0f);
-                robot_arm_calculate_inverse(150.0f, 210.0f , degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(700);
-
-                robot_arm_calculate_inverse(90.0f, 180.0f , degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(300);
-                close_claw();
-                delay_ms(300);
-                robot_arm_calculate_inverse(90.0f, 210, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-                robot_arm_calculate_inverse(220, 250, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-            }
-            //夹起第三个物料
-            else if(i == 2)
-            {
-                robot_arm_control_botton_position(-41.0f);
-                robot_arm_calculate_inverse(150.0f, 210.0f , degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(700);
-
-                robot_arm_calculate_inverse(90.0f, 180.0f , degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(300);
-                close_claw();
-                delay_ms(300);
-                robot_arm_calculate_inverse(90.0f, 210, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-                robot_arm_calculate_inverse(220, 250, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-            }
-
-            //放置
-            if(qr_data_packge[i + qr_times] == '1')
-            {
-                robot_arm_control_botton_position(30.5f);
-                delay_ms(1000);
-                robot_arm_calculate_inverse(305, 100, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(700);
-                robot_arm_calculate_inverse(310, 90, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-                open_claw_small();
-                delay_ms(500);
-                robot_arm_calculate_inverse(250, 150, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-            }
-            else if(qr_data_packge[i + qr_times] == '2')
-            {
-                robot_arm_control_botton_position(3.7f);
-                delay_ms(1000);
-                robot_arm_calculate_inverse(270, 100, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(700);
-                robot_arm_calculate_inverse(270, 90, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-                open_claw_small();
-                delay_ms(500);
-                robot_arm_calculate_inverse(250, 150, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-            }
-            else if(qr_data_packge[i + qr_times] == '3')
-            {
-                robot_arm_control_botton_position(-24.3f);
-                delay_ms(1000);
-                robot_arm_calculate_inverse(293, 100, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(700);
-                robot_arm_calculate_inverse(303, 90, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-                open_claw_small();
-                delay_ms(500);
-                robot_arm_calculate_inverse(250, 150, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-            }
-        }
-
-        robot_arm_calculate_inverse(250, 250, degree);
-        robot_arm_control_arm_poosition(degree[0], degree[1]);
-        robot_arm_control_botton_position(0.0f);
+        delay_ms(500);
+        garb_item_on_disk_plus(qr_data_packge[i + p_qr_data_packge]);
         delay_ms(500);
 
-        //夹起
-        for(char i = 0;i < 3; i++)
-        {
-            if(qr_data_packge[i + qr_times] == '1')
-            {
-                robot_arm_control_botton_position(30.5f);
-                delay_ms(700);
-                robot_arm_calculate_inverse(310, 90, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(700);
-                close_claw();
-            }
-            else if(qr_data_packge[i + qr_times] == '2')
-            {
-                robot_arm_control_botton_position(3.7f);
-                delay_ms(700);
-                robot_arm_calculate_inverse(270, 90, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(700);
-                close_claw();
-            }
-            else if(qr_data_packge[i + qr_times] == '3')
-            {
-                robot_arm_control_botton_position(-24.3f);
-                delay_ms(700);
-                robot_arm_calculate_inverse(303, 90, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(700);
-                close_claw();
-            }
-
-            delay_ms(500);
-            robot_arm_calculate_inverse(170, 250, degree);
-            robot_arm_control_arm_poosition(degree[0], degree[1]);
-
-            //放盘子
-            if(i == 0)
-            {
-                robot_arm_control_botton_position(41.0f);
-            }
-            else if(i == 1)
-            {
-                robot_arm_control_botton_position(0.0f);
-            }
-            else if(i == 2)
-            {
-                robot_arm_control_botton_position(-41.0f);
-            }
-
-            delay_ms(600);
-            robot_arm_calculate_inverse(90.0f, 210.0f , degree);
-            robot_arm_control_arm_poosition(degree[0], degree[1]);
-
-            delay_ms(700);
-            robot_arm_calculate_inverse(90.0f, 190.0f , degree);
-            robot_arm_control_arm_poosition(degree[0], degree[1]);
-
-            delay_ms(200);
-            open_claw_small();
-
-            delay_ms(200);
-            robot_arm_calculate_inverse(140.0f, 260.0f , degree);
-            robot_arm_control_arm_poosition(degree[0], degree[1]);
-        }
+        if(count_time == 3)
+            place_item_on_ground(qr_data_packge[i + p_qr_data_packge], 3);
+        else 
+        place_item_on_ground(qr_data_packge[i + p_qr_data_packge], 0);
     }
-    //成品区域定位数据
-    else    
+
+    delay_ms(500);
+
+    //粗加工区域
+    if(count_time == 0 || count_time == 2)
     {
-        if(tasks_times == 3) tasks_times = 80;
-
-        for(char i = 0; i < 3; i++)
+        //夹取三个物料
+        for(char i = 0;i < 3;i++)
         {
-            //夹起第二个物料
-            if(i == 1)
-            {
-                robot_arm_control_botton_position(0.0f);
-                robot_arm_calculate_inverse(150.0f, 210.0f , degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(700);
-                robot_arm_calculate_inverse(90.0f, 180.0f , degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(300);
-                close_claw();
-                delay_ms(300);
-                robot_arm_calculate_inverse(90.0f, 210, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-                robot_arm_calculate_inverse(220, 250, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-            }
-            //夹起第三个物料
-            else if(i == 2)
-            {
-                robot_arm_control_botton_position(-41.0f);
-                robot_arm_calculate_inverse(150.0f, 210.0f , degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(700);
-
-                robot_arm_calculate_inverse(90.0f, 180.0f , degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(300);
-                close_claw();
-                delay_ms(300);
-                robot_arm_calculate_inverse(90.0f, 210, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-                robot_arm_calculate_inverse(220, 250, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-            }
-
-            //放置
-            if(qr_data_packge[i + qr_times] == '1')
-            {
-                robot_arm_control_botton_position(30.7f);
-                delay_ms(1000);
-                robot_arm_calculate_inverse(300, 100 + item_height, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(700);
-                robot_arm_calculate_inverse(305, 90 + item_height, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-                open_claw_small();
-                delay_ms(500);
-                robot_arm_calculate_inverse(250, 150 + item_height, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-            }
-            else if(qr_data_packge[i + qr_times] == '2')
-            {
-                robot_arm_control_botton_position(2.8f);
-                delay_ms(1000);
-                robot_arm_calculate_inverse(265, 100 + item_height, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(700);
-                robot_arm_calculate_inverse(265, 90 + item_height, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-                open_claw_small();
-                delay_ms(500);
-                robot_arm_calculate_inverse(250, 150 + item_height, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-            }
-            else if(qr_data_packge[i + qr_times] == '3')
-            {
-                robot_arm_control_botton_position(-25.0f);
-                delay_ms(1000);
-                robot_arm_calculate_inverse(295, 100 + item_height, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(700);
-                robot_arm_calculate_inverse(300, 90 + item_height, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-                open_claw_small();
-                delay_ms(500);
-                robot_arm_calculate_inverse(250, 150 + item_height, degree);
-                robot_arm_control_arm_poosition(degree[0], degree[1]);
-                delay_ms(500);
-            }
+            garb_item_on_guound_plus(qr_data_packge[i + p_qr_data_packge]);
+            delay_ms(500);
+            place_item_on_disk(qr_data_packge[i + p_qr_data_packge]);
         }
     }
 
-    robot_arm_control_botton_position(41.0f);
-    robot_arm_calculate_inverse(220, 250, degree);
-    robot_arm_control_arm_poosition(degree[0], degree[1]);
-    open_claw_small();
-    tasks_times++;
+    robot_arm_reset_yz();
+
+    if((count_time == 0) || (count_time == 2)) 
+        _abs_robot_arm_angle = 135.0f;
+    else if(count_time == 1)  
+        _abs_robot_arm_angle = 45.0f;
+    else if(count_time == 3)
+        _abs_robot_arm_angle = 0.0f;
+
+    count_time++;
 }
+
