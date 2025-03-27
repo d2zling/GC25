@@ -4,7 +4,7 @@
 #include "timer.h"
 
 //机械爪张开和闭合的角度
-#define claw_close   100
+#define claw_close   90
 #define claw_open    0
 #define claw_open_small    30
 

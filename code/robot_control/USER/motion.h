@@ -13,20 +13,18 @@
 #define rotator_num_2_position 340.208f, 169.198f,  -15.460f
 #define rotator_num_3_position 186.781f, 167.856f,  -2.381f
  
-#define disk_hight             60.0f
-#define disk_num_1_position    86.875f,  180.709f,  52.668f
-#define disk_num_2_position    89.888f,  181.305f,  -0.102f
-#define disk_num_3_position    93.526f,  182.780f,  -52.754f
-
-
+#define disk_hight             65.0f
+#define disk_num_1_position    89.875f,  182.709f,  52.668f
+#define disk_num_2_position    89.888f,  182.305f,  -0.102f
+#define disk_num_3_position    85.526f,  182.780f,  -52.754f
 
 #define ground_num_1_position  286.512f, 84.194f, 29.699f
-#define ground_num_2_position  247.586f, 84.904f, 00.300f
+#define ground_num_2_position  245.586f, 86.904f, 00.300f
 #define ground_num_3_position  283.127f, 85.920f, -28.932f
 
-#define ground_num_1_second_floor_position  286.512f, 156.0f, 29.699f
-#define ground_num_2_second_floor_position  242.972f, 156.714f, 0.124f
-#define ground_num_3_second_floor_position  286.595f, 156.022f, -29.012f
+#define ground_num_1_second_floor_position  325.175f, 154.950f, 29.666f
+#define ground_num_2_second_floor_position  281.361f, 154.908f, 3.732f
+#define ground_num_3_second_floor_position  301.924f, 154.994f, -23.307f
 
 //定位死区
 #define first_location_dead_area    5
@@ -44,6 +42,14 @@
 //物料区第二次定位目标位置
 #define process_targe_x_second          160
 #define process_targe_y_second          120
+
+//二层粗定位目标
+#define process_targe_x_first_height    167
+#define process_targe_y_first_height    118
+
+//二层精定位目标
+#define process_targe_x_height          168
+#define process_targe_y_height          101
 
 //圆心定位限幅
 #define circle_locatin_limit            2.0f

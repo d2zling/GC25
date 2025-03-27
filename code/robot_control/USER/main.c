@@ -47,10 +47,46 @@ int main(void)
     scanner_init();
 
     delay_ms(2000);
-
     robot_arm_reset_yz();
 
+    // gimbal_motor_set_speed_acc(500, 100);
+    // processing_location_task(DISABLE);
+    // delay_ms(500);
+    // garb_item_on_disk_plus('1');
+    // delay_ms(500);
+    // place_item_on_ground('1', 3);
+    // delay_ms(500);
+    // garb_item_on_disk_plus('2');
+    // delay_ms(500);
+    // place_item_on_ground('2', 3);
+    // delay_ms(500);
+    // garb_item_on_disk_plus('3');
+    // delay_ms(500);
+    // place_item_on_ground('3', 3);
+
+#if test_rotator_task
+
+    gimbal_motor_set_speed_acc(500, 200);
+    qr_data_packge[0] = '1';
+    qr_data_packge[1] = '3';
+    qr_data_packge[2] = '2';
+
+    rotator_task_plus();
+    while(1);
+
+#endif
+
+#if test_processing_task
+
     gimbal_motor_set_speed_acc(500, 100);
+    qr_data_packge[0] = '1';
+    qr_data_packge[1] = '3';
+    qr_data_packge[2] = '2';
+
+    processing_task_plus();
+
+    while(1);
+#endif
 
 #if robot_arm_demonstration
 
@@ -83,7 +119,7 @@ int main(void)
     //创建x轴速度队列
     static li5_t node_x_speed[]={{0.0f, 0.0f, 0.0f, 0.0f, NULL},        //出发到扫码区域
                                  {1500.0f, 450.0f, 0.5f, 0.0f, NULL},
-                                 {3000.0f, 640.0f, 0.0f, 0.0f, NULL},
+                                 {3000.0f, 700.0f, 0.0f, 0.0f, NULL},
                                  {.task =  qr_code_task},                 //扫码区域到转盘区域
                                  {3000.0f, 900.0f, 0.0f, 0.0f, NULL},
 
@@ -96,12 +132,12 @@ int main(void)
 
                                  {.task =  processing_task_plus},       //精加工区到转盘
                                  {2000.0f, -100.0f, -0.2f, 0.0f, NULL},
-                                 {4000.0f, -500.0f, 0.0f, 0.0f, NULL},
+                                 {4000.0f, -550.0f, 0.0f, 0.0f, NULL},
 
                                  //二程
                                  {.task =  rotator_task_plus},               //转盘区域到粗加工区
                                  {1500.0f, -450.0f, 0.0f, 0.0f, NULL},
-                                 {6000.0f, -350.0f, 0.0f, 0.0f, NULL},
+                                 {6000.0f, -300.0f, 0.0f, 0.0f, NULL},          //!!!!!!!!!易出界
                                  {.task =  processing_task_plus},       //粗加工区域到精加工区域
                                  {2500.0f, 850.0f, 0.1f, 0.0f, NULL},
                                  {4000.0f, 900.0f, 0.0f, 0.0f, NULL},
@@ -109,7 +145,7 @@ int main(void)
                                  //回家
                                  {.task =  processing_task_plus},
                                  {6000.0f, -2000.0f, 0.0f, 0.0f, NULL},
-                                 {9000.0f, -2200.0f, 0.0f, 0.0f, NULL},
+                                 {9000.0f, -2100.0f, 0.0f, 0.0f, NULL},
                                  {.task =  &end_quene}};
 
     // //创建y轴速度队列
@@ -140,8 +176,8 @@ int main(void)
 
                                  //回家
                                  {.task =  void_task},                  
-                                 {6000.0f, 0.0f, 0.0f, 0.0f, NULL},        
-                                 {9000.0f, 1300.0f, 0.0f, 0.0f, NULL},
+                                 {6000.0f, -100.0f, 0.0f, 0.0f, NULL},        
+                                 {9000.0f, 1000.0f, 0.0f, 0.0f, NULL},
                                  {.task =  &end_quene}};
 
     // //创建w轴速度队列

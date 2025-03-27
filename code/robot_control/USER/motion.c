@@ -67,13 +67,14 @@ void grab_item_on_rotator_plus(uint8_t rotator_num)
     robot_arm_control_yz(rotator_item_position[rotator_num][0], 
                          rotator_item_position[rotator_num][1]);
     robot_arm_control_botton_position(rotator_item_position[rotator_num][2]);
-    delay_ms(800);
-    close_claw();
-    delay_ms(300);  
-    robot_arm_set_middle_position();
     delay_ms(500);
-    // if((rotator_num == 1) || (rotator_num == 3)) delay_ms(400);
-    // else delay_ms(200);
+    close_claw();
+    delay_ms(300);
+
+    robot_arm_control_yz(210.0f, 280.0f);   //!!!!!
+    delay_ms(500);
+        // robot_arm_set_middle_position();
+    robot_arm_control_botton_position(0.0f);
 }
 
 /**
@@ -93,7 +94,7 @@ void garb_item_on_disk_plus(uint8_t item_color)
     delay_ms(500);
     close_claw();
     delay_ms(500);
-    robot_arm_control_yz(disk_item_position[item_color][0], disk_item_position[item_color][1] + 120.0f);
+    robot_arm_control_yz(disk_item_position[item_color][0], disk_item_position[item_color][1] + 150.0f);
 }
 
 /**
@@ -127,11 +128,13 @@ void place_item_on_ground(uint8_t item_color, char second_floor)
     robot_arm_control_botton_position(ground_item_position[item_color][2]);
     robot_arm_control_yz(ground_item_position[item_color][0], ground_item_position[item_color][1] + 20.0f);
     delay_ms(1200);
+    gimbal_motor_set_speed_acc(1, 1);
     robot_arm_control_yz(ground_item_position[item_color][0], ground_item_position[item_color][1]);
-    delay_ms(200);
+    gimbal_motor_set_speed_acc(500, 100);
+    delay_ms(1000);
     open_claw_small();
     delay_ms(200);
-    robot_arm_control_yz(ground_item_position[item_color][0], ground_item_position[item_color][1] + 50.0f);
+    robot_arm_control_yz(ground_item_position[item_color][0] - 50.0f, ground_item_position[item_color][1] + 50.0f);
     delay_ms(500);
     robot_arm_set_middle_position();
 }
@@ -148,7 +151,7 @@ void place_item_on_disk(uint8_t item_color)
     robot_arm_control_botton_position(disk_item_position[item_color][2]);
     delay_ms(200);
     robot_arm_control_yz(disk_item_position[item_color][0], disk_item_position[item_color][1] + disk_hight + 20.0f);
-    delay_ms(700);
+    delay_ms(800);
     robot_arm_control_yz(disk_item_position[item_color][0], disk_item_position[item_color][1]);
     delay_ms(500);
     open_claw_small();
@@ -156,7 +159,7 @@ void place_item_on_disk(uint8_t item_color)
     robot_arm_control_yz(disk_item_position[item_color][0], disk_item_position[item_color][1] + disk_hight + 40.0f);
     delay_ms(400);
     robot_arm_set_middle_position();
-    delay_ms(500);
+    delay_ms(800);
 }
 
 /**
@@ -277,15 +280,31 @@ void processing_location_task(char enable_circle_location)
             location_data = get_pi_location_data();
         }
 
-        if((abs(process_targe_x_first - location_data[1]) < first_location_dead_area) &&
-           (abs(process_targe_y_first - location_data[2]) < first_location_dead_area))
+        if(enable_circle_location == ENABLE)
         {
-            stop_Omni_Wheel();
-                break;
+            if((abs(process_targe_x_first - location_data[1]) < first_location_dead_area) &&
+            (abs(process_targe_y_first - location_data[2]) < first_location_dead_area))
+            {
+                stop_Omni_Wheel();
+                    break;
+            }
+            
+            err1 = -(process_targe_x_first - location_data[1]) * 0.2f;
+            err2 = (process_targe_y_first - location_data[2]) * 0.2f;
         }
-        
-        err1 = -(process_targe_x_first - location_data[1]) * 0.2f;
-        err2 = (process_targe_y_first - location_data[2]) * 0.2f;
+        else
+        {
+            if((abs(process_targe_x_first_height - location_data[1]) < first_location_dead_area) &&
+            (abs(process_targe_y_first_height - location_data[2]) < first_location_dead_area))
+            {
+                stop_Omni_Wheel();
+                    break;
+            }
+            
+            err1 = -(process_targe_x_first_height - location_data[1]) * 0.2f;
+            err2 = (process_targe_y_first_height - location_data[2]) * 0.2f;
+        }
+
 
         set_car_speed_Omni_Wheel_diagonal(err1, err2);
     }
@@ -309,10 +328,41 @@ void processing_location_task(char enable_circle_location)
         if(abs(location_data[0]) < degree_location_dead_area) break;
     }
 
+    //精定位
     if(enable_circle_location == DISABLE)
     {
+        robot_arm_control_botton_position(135.0f);
+        robot_arm_control_yz(232.0f, 100.0f);
+        delay_ms(1000);
+
+        //xy平面定位
+        get_pi_location_data();
+        while(1)
+        {
+            location_data = NULL;
+            
+            while(location_data == NULL)
+            {
+                call_pi(location);
+                location_data = get_pi_location_data();
+            }
+
+            if((abs(process_targe_x_height - location_data[1]) < first_location_dead_area) &&
+            (abs(process_targe_y_height - location_data[2]) < first_location_dead_area))
+            {
+                stop_Omni_Wheel();
+                    break;
+            }
+            
+            err1 = -(process_targe_x_height - location_data[1]) * 0.2f;
+            err2 = (process_targe_y_height - location_data[2]) * 0.2f;
+
+            set_car_speed_Omni_Wheel_diagonal(err1, err2);
+        }
+
         robot_arm_set_middle_position();
-        delay_ms(500);
+        delay_ms(2000);
+
         return;
     }
 
@@ -322,6 +372,7 @@ void processing_location_task(char enable_circle_location)
     delay_ms(2000);
 
     //圆环定位
+    circle_location:
     while(1)
     {
         location_data = NULL;
@@ -374,21 +425,21 @@ void processing_location_task(char enable_circle_location)
     
     //清除缓冲区
     get_pi_location_data();
+    delay_ms(500);
+    //校验
+    location_data = NULL;
+    while(location_data == NULL)
+    {
+        call_pi(circle);
+        location_data = get_pi_location_data();
+    }
 
-    // //校验
-    // location_data = NULL;
-    // while(location_data == NULL)
-    // {
-    //     call_pi(circle);
-    //     location_data = get_pi_location_data();
-    // }
-
-    // if((abs(process_targe_x_second - location_data[1]) > second_location_dead_area) ||
-    //    (abs(process_targe_y_second - location_data[2]) > second_location_dead_area))
-    // {
-    //     //重新圆环定位
-    //     goto circle_location;
-    // }
+    if((abs(process_targe_x_second - location_data[1]) > second_location_dead_area) ||
+       (abs(process_targe_y_second - location_data[2]) > second_location_dead_area))
+    {
+        //重新圆环定位
+        goto circle_location;
+    }
 }
 
 /**
@@ -403,7 +454,7 @@ void rotator_task_plus(void)
     u8 *color_area_data;
 
     stop_Omni_Wheel();
-
+    gimbal_motor_set_speed_acc(500, 200);
     rotator_location_task();
 
     //摆到物料识别位置
@@ -420,6 +471,8 @@ void rotator_task_plus(void)
         if(color_area_data != NULL) break;
     }
 
+    delay_ms(500);
+
     //第二段二维码读数
     if(count_time == 1) p_qr_data_packge = 4;
 
@@ -427,7 +480,7 @@ void rotator_task_plus(void)
     place_item_on_disk(qr_data_packge[0 + p_qr_data_packge]);
     grab_item_on_rotator_plus(color_area_data[qr_data_packge[1 + p_qr_data_packge] - '1']);
     place_item_on_disk(qr_data_packge[1 + p_qr_data_packge]);
-    delay_ms(1000);
+    delay_ms(500);
 
     //清除缓冲
     get_pi_color_area_data();
@@ -462,6 +515,8 @@ void processing_task_plus(void)
 
     stop_Omni_Wheel();
 
+    gimbal_motor_set_speed_acc(500, 100);
+
     if(count_time == 3)
         processing_location_task(DISABLE);
     else
@@ -484,7 +539,7 @@ void processing_task_plus(void)
         place_item_on_ground(qr_data_packge[i + p_qr_data_packge], 0);
     }
 
-    delay_ms(500);
+    delay_ms(1000);
 
     //粗加工区域
     if(count_time == 0 || count_time == 2)

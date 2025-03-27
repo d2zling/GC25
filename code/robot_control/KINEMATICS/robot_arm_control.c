@@ -204,7 +204,6 @@ void robot_arm_calculate_inverse(float y, float z, float* out_arm_degree)
                               (2.0f * first_arm_lenght * second_arm_lenght)) * 
                               rad_2_angle;
 
-
     first_arm_degree = 90.0f - first_arm_degree;
     second_arm_degree = -90.0f + second_arm_degree - first_arm_degree;
 
