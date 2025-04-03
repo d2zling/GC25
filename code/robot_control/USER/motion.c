@@ -1,5 +1,7 @@
 #include "motion.h"
 
+#define location_correct      1
+
 //扫码数据
 char * qr_dara = NULL;
 //机械臂保持角度
@@ -250,6 +252,7 @@ void processing_location_task(char enable_circle_location)
     robot_arm_control_yz(232.0f, 220.0f);
     delay_ms(2000);
 
+#if location_correct
     //角度定位
     while(1)
     {
@@ -366,6 +369,8 @@ void processing_location_task(char enable_circle_location)
         return;
     }
 
+#endif
+
     //圆环定位动作
     robot_arm_control_botton_position(0.0f);
     robot_arm_control_yz(193.4f, 80.0f);
@@ -455,7 +460,10 @@ void rotator_task_plus(void)
 
     stop_Omni_Wheel();
     gimbal_motor_set_speed_acc(500, 200);
-    rotator_location_task();
+
+#if location_correct
+    rotator_location_task();    //识别!!!!!!!!!!!!!!!!
+#endif
 
     //摆到物料识别位置
     robot_arm_control_botton_position(0.0f);

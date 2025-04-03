@@ -49,21 +49,6 @@ int main(void)
     delay_ms(2000);
     robot_arm_reset_yz();
 
-    // gimbal_motor_set_speed_acc(500, 100);
-    // processing_location_task(DISABLE);
-    // delay_ms(500);
-    // garb_item_on_disk_plus('1');
-    // delay_ms(500);
-    // place_item_on_ground('1', 3);
-    // delay_ms(500);
-    // garb_item_on_disk_plus('2');
-    // delay_ms(500);
-    // place_item_on_ground('2', 3);
-    // delay_ms(500);
-    // garb_item_on_disk_plus('3');
-    // delay_ms(500);
-    // place_item_on_ground('3', 3);
-
 #if test_rotator_task
 
     gimbal_motor_set_speed_acc(500, 200);
@@ -151,7 +136,7 @@ int main(void)
     // //创建y轴速度队列
     static li5_t node_y_speed[]={{0.0f, 0.0f, 0.0f, 0.0f, NULL},        //出发到扫码区域
                                  {1500.0f, -200.0f, -0.1f, 0.0f, NULL},
-                                 {3000.0f, -150.0f, 0.0f, 0.0f, NULL},
+                                 {3000.0f, -200.0f, 0.0f, 0.0f, NULL},
                                  {.task =  void_task},                  //扫码区域到转盘区域
                                  {3000.0f, 0.0f, 0.0f, 0.0f, NULL},
 
