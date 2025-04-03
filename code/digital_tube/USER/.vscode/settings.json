@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "gpio.h": "c",
+        "delay.h": "c",
+        "pwm.h": "c",
+        "power.h": "c",
+        "uart.h": "c",
+        "usart.h": "c",
+        "sys.h": "c",
+        "stm32f10x_rcc.h": "c",
+        "string": "c",
+        "stm32f10x_gpio.h": "c",
+        "stdio.h": "c"
+    }
+}

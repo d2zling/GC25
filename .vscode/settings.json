@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "robot_arm_control.h": "c"
+        "robot_arm_control.h": "c",
+        "main.h": "c",
+        "path_control.h": "c"
     }
 }
